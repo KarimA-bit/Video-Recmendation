@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendation Bot</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            margin: 0;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #007BFF;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 20px;
+        }
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            min-width: 300px;
+        }
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #e9ecef;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #loading {
+            display: none;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="box">
+            <h2>Recommendations</h2>
+            <input type="text" id="user_input" placeholder="Enter your interests...">
+            <button id="submit">Get Recommendations</button>
+            <div id="response"></div>
+        </div>
+
+        <div class="box">
+            <h2>YouTube Video Summary</h2>
+            <input type="text" id="video_input" placeholder="Enter YouTube video URL...">
+            <button id="summarize">Get Summary</button>
+            <div id="loading">Loading...</div>
+            <div id="video_summary"></div>
+        </div>
+    </div>
+
+    <script>
+        const YOUTUBE_API_KEY = 'AIzaSyCm9vIy-fwcb7g1jKB5NRg6CY-zo3X7TlE'; // Your YouTube Data API key
+        const OLLAMA_API_URL = 'http://localhost:11434/summarize'; // URL for your local Ollama server
+        const TRANSCRIPT_API_URL = 'https://your-transcript-api-url?videoId='; // Your transcript API URL
+
+        class RecommendationBot {
+            constructor() {
+                this.recommendations = {
+                    'technology': [
+                        "Python Programming - A great course to start coding.",
+                        "Data Science Bootcamp - Learn data analysis and visualization.",
+                        "Introduction to Machine Learning - Explore the basics of ML.",
+                        "Web Development Essentials - Build websites from scratch."
+                    ],
+                    'art': [
+                        "Watercolor Painting - Discover the beauty of painting.",
+                        "Graphic Design Essentials - Learn the fundamentals of design.",
+                        "Photography Basics - Capture stunning photos.",
+                        "Digital Illustration - Create art using digital tools."
+                    ],
+                    'business': [
+                        "Startup Funding Tips - Navigate the world of startup financing.",
+                        "Digital Marketing Strategies - Boost your online presence.",
+                        "Entrepreneurship 101 - Learn the basics of starting a business.",
+                        "Business Analytics - Make data-driven decisions."
+                    ],
+                    'writing': [
+                        "Creative Writing Workshop - Unleash your storytelling potential.",
+                        "Short Story Writing - Craft compelling short narratives.",
+                        "Blogging for Beginners - Start your own blog.",
+                        "Poetry Fundamentals - Explore the art of poetry."
+                    ]
+                };
+            }
+
+            getRecommendations(userInput) {
+                userInput = userInput.toLowerCase();
+
+                if (userInput.includes("technology")) {
+                    return this.recommendations['technology'];
+                } else if (userInput.includes("art")) {
+                    return this.recommendations['art'];
+                } else if (userInput.includes("business")) {
+                    return this.recommendations['business'];
+                } else if (userInput.includes("writing")) {
+                    return this.recommendations['writing'];
+                } else {
+                    return ["I can provide recommendations in technology, art, business, or writing. Please specify."];
+                }
+            }
+        }
+
+        $(document).ready(function() {
+            const bot = new RecommendationBot();
+
+            $('#submit').click(function() {
+                const userInput = $('#user_input').val().trim();
+                $('#response').empty();
+
+                if (userInput === '') {
+                    $('#response').html('<p style="color: red;">Please enter a topic to get recommendations.</p>');
+                    return;
+                }
+
+                const recommendations = bot.getRecommendations(userInput);
+                $('#response').html('<h3>Recommendations:</h3><ul>' + recommendations.map(item => '<li>' + item + '</li>').join('') + '</ul>');
+            });
+
+            $('#summarize').click(function() {
+                const videoUrl = $('#video_input').val().trim();
+                $('#video_summary').empty();
+                $('#loading').show();
+
+                if (videoUrl === '') {
+                    $('#video_summary').html('<p style="color: red;">Please enter a YouTube video URL.</p>');
+                    $('#loading').hide();
+                    return;
+                }
+
+                const videoId = new URL(videoUrl).searchParams.get('v');
+                if (videoId) {
+                    fetch(`'${http://localhost:5000/transcript/'}${videoId}&key=${AIzaSyAGgxJs2lTcQMjgQfjpmjmZjbTUdJVNI4U`)
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.text().then(text => {
+                                    throw new Error(`Error: ${response.status} - ${text}`);
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            const transcript = data.transcript; // Assuming your API returns a transcript
+                            return fetch(OLLAMA_API_URL, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ text: transcript })
+                            });
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Error fetching summary');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            $('#loading').hide();
+                            $('#video_summary').html('<h4>Summary:</h4><p>' + data.summary + '</p>');
+                        })
+                        .catch(error => {
+                            $('#loading').hide();
+                            console.error('Fetch error:', error);
+                            $('#video_summary').html('<p style="color: red;">An error occurred: ' + error.message + '</p>');
+                        });
+                } else {
+                    $('#loading').hide();
+                    $('#video_summary').html('<p style="color: red;">Invalid YouTube URL. Please check and try again.</p>');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
